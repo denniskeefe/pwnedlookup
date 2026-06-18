@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Have I Been Pwned</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -276,6 +277,31 @@
 
     .show-more:hover { color: var(--text); border-color: var(--accent); }
 
+    .export-bar {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .export-bar span { font-size: 0.8rem; color: var(--muted); margin-right: 0.25rem; }
+
+    button.export {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    button.export:hover { border-color: var(--accent); color: var(--accent); }
+
     .input-wrap { position: relative; }
     .input-wrap input { padding-right: 5rem; }
     .pw-toggle {
@@ -324,6 +350,12 @@
         </div>
       </div>
       <div class="results" id="breach-results"></div>
+      <div class="export-bar" id="breach-export" style="display:none">
+        <span>Export:</span>
+        <button class="export" onclick="exportData('breach','json')">JSON</button>
+        <button class="export" onclick="exportData('breach','csv')">CSV</button>
+        <button class="export" onclick="exportData('breach','pdf')">PDF</button>
+      </div>
     </div>
 
     <!-- Pastes -->
@@ -338,6 +370,12 @@
         </div>
       </div>
       <div class="results" id="paste-results"></div>
+      <div class="export-bar" id="paste-export" style="display:none">
+        <span>Export:</span>
+        <button class="export" onclick="exportData('paste','json')">JSON</button>
+        <button class="export" onclick="exportData('paste','csv')">CSV</button>
+        <button class="export" onclick="exportData('paste','pdf')">PDF</button>
+      </div>
     </div>
 
     <!-- Password -->
@@ -359,6 +397,122 @@
   </div>
 
   <script>
+    // ---- Last results store (for export) ----
+    const lastResults = { breach: null, paste: null };
+
+    // ---- Export ----
+    function downloadFile(filename, content, mime) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function exportData(type, format) {
+      const data = lastResults[type];
+      if (!data) return;
+      const date = new Date().toISOString().slice(0, 10);
+      const label = type === "breach" ? "breaches" : "pastes";
+      const key = type === "breach" ? "breaches" : "pastes";
+
+      if (format === "json") {
+        downloadFile(`hibp-${label}-${date}.json`, JSON.stringify(data, null, 2), "application/json");
+        return;
+      }
+
+      if (format === "csv") {
+        const rows = [["Email", "Name", "Date", "Data Exposed", "Count"]];
+        data.forEach(({ email, [key]: items }) => {
+          if (!items.length) {
+            rows.push([email, "None", "", "", ""]);
+          } else {
+            items.forEach((item) => {
+              if (type === "breach") {
+                rows.push([email, item.Name, item.BreachDate, item.DataClasses.join("; "), item.PwnCount ?? ""]);
+              } else {
+                rows.push([email, item.Source, item.Date ? item.Date.slice(0, 10) : "", item.Title || "", ""]);
+              }
+            });
+          }
+        });
+        const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+        downloadFile(`hibp-${label}-${date}.csv`, csv, "text/csv");
+        return;
+      }
+
+      if (format === "pdf") {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: "pt", format: "letter" });
+        const margin = 48;
+        let y = margin;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.text("Have I Been Pwned — " + (type === "breach" ? "Breach Report" : "Paste Report"), margin, y);
+        y += 10;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(120, 120, 140);
+        doc.text(`Generated ${new Date().toLocaleString()}`, margin, y + 14);
+        y += 36;
+
+        data.forEach(({ email, [key]: items }) => {
+          if (y > 700) { doc.addPage(); y = margin; }
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(11);
+          doc.setTextColor(232, 93, 4);
+          doc.text(email, margin, y);
+          y += 6;
+
+          doc.setDrawColor(46, 50, 80);
+          doc.line(margin, y, 563, y);
+          y += 14;
+
+          if (!items.length) {
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(10);
+            doc.setTextColor(100, 120, 100);
+            doc.text("No " + label + " found.", margin + 8, y);
+            y += 24;
+          } else {
+            items.forEach((item) => {
+              if (y > 700) { doc.addPage(); y = margin; }
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(10);
+              doc.setTextColor(232, 234, 240);
+              const name = type === "breach" ? item.Name : item.Source;
+              const dateStr = type === "breach" ? item.BreachDate : (item.Date ? item.Date.slice(0, 10) : "");
+              doc.text(`${name}  ${dateStr}`, margin + 8, y);
+              y += 14;
+
+              if (type === "breach" && item.DataClasses?.length) {
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(8.5);
+                doc.setTextColor(123, 130, 160);
+                const wrapped = doc.splitTextToSize(item.DataClasses.join(", "), 490);
+                doc.text(wrapped, margin + 8, y);
+                y += wrapped.length * 11 + 4;
+              }
+
+              if (type === "paste" && item.Title) {
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(8.5);
+                doc.setTextColor(123, 130, 160);
+                doc.text(item.Title, margin + 8, y);
+                y += 14;
+              }
+            });
+            y += 8;
+          }
+        });
+
+        doc.save(`hibp-${label}-${date}.pdf`);
+      }
+    }
+
     // ---- API Key management ----
     const KEY_STORAGE = "hibp_api_key";
 
@@ -451,6 +605,8 @@
       container.innerHTML = "";
       try {
         const results = await apiPost("/api/breaches", { emails });
+        lastResults.breach = results;
+        document.getElementById("breach-export").style.display = "flex";
         container.innerHTML = results.map(renderBreachBlock).join("");
         container.querySelectorAll(".result-header").forEach(h => {
           h.addEventListener("click", () => h.closest(".result-block").classList.toggle("open"));
@@ -510,6 +666,8 @@
       container.innerHTML = "";
       try {
         const results = await apiPost("/api/pastes", { emails });
+        lastResults.paste = results;
+        document.getElementById("paste-export").style.display = "flex";
         container.innerHTML = results.map(renderPasteBlock).join("");
         container.querySelectorAll(".result-header").forEach(h => {
           h.addEventListener("click", () => h.closest(".result-block").classList.toggle("open"));
