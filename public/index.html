@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Have I Been Pwned</title>
+  <title>PwnedLookup</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -347,7 +347,7 @@
 <body>
   <div class="container">
     <header>
-      <h1>Have I Been Pwned</h1>
+      <h1>PwnedLookup</h1>
       <p>Check emails and passwords against known data breaches</p>
     </header>
 
@@ -496,7 +496,7 @@
         doc.setFont("helvetica", "bold");
         doc.setFontSize(18);
         doc.setTextColor(20, 20, 30);
-        doc.text("Have I Been Pwned — " + (type === "breach" ? "Breach Report" : "Paste Report"), margin, y);
+        doc.text("PwnedLookup — " + (type === "breach" ? "Breach Report" : "Paste Report"), margin, y);
         y += 10;
 
         doc.setFont("helvetica", "normal");

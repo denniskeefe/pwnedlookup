@@ -1,4 +1,4 @@
-# Have I Been Pwned App
+# PwnedLookup
 
 A lightweight web app for checking emails and passwords against the [Have I Been Pwned](https://haveibeenpwned.com) database. Runs locally or deploys to Vercel in one command.
 
