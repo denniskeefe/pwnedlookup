@@ -309,6 +309,28 @@
       background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.85rem;
     }
     .pw-toggle:hover { color: var(--text); }
+
+    .cta-link {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+    .cta-link:hover { opacity: 0.75; }
+
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.8;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -329,7 +351,10 @@
         <button class="secondary" id="key-save-btn">Save</button>
         <button class="secondary" id="key-clear-btn" style="display:none">Clear</button>
       </div>
-      <span class="key-status missing" id="key-status">No key set</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem;flex-shrink:0">
+        <span class="key-status missing" id="key-status">No key set</span>
+        <a id="key-cta" href="https://haveibeenpwned.com/API/Key" target="_blank" rel="noopener noreferrer" class="cta-link">Get an API key →</a>
+      </div>
     </div>
 
     <div class="tabs">
@@ -394,6 +419,16 @@
       </div>
       <div class="results" id="pw-results"></div>
     </div>
+    <footer>
+      <p>
+        Powered by <a href="https://haveibeenpwned.com" target="_blank" rel="noopener noreferrer">Have I Been Pwned</a>
+        &nbsp;·&nbsp;
+        <a href="https://haveibeenpwned.com/API/Key" target="_blank" rel="noopener noreferrer">Get an API subscription</a>
+        &nbsp;·&nbsp;
+        <a href="https://haveibeenpwned.com/Privacy" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+      </p>
+      <p style="margin-top:0.35rem">API keys are stored in your browser only and never sent to any third party.</p>
+    </footer>
   </div>
 
   <script>
@@ -526,6 +561,7 @@
       const clearBtn = document.getElementById("key-clear-btn");
       const input = document.getElementById("key-input");
 
+      const cta = document.getElementById("key-cta");
       if (key) {
         banner.className = "key-banner set";
         status.textContent = "Key saved ✓";
@@ -534,6 +570,7 @@
         input.disabled = true;
         saveBtn.style.display = "none";
         clearBtn.style.display = "";
+        cta.style.display = "none";
       } else {
         banner.className = "key-banner unset";
         status.textContent = "No key set";
@@ -542,6 +579,7 @@
         input.disabled = false;
         saveBtn.style.display = "";
         clearBtn.style.display = "none";
+        cta.style.display = "";
       }
     }
 
