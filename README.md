@@ -8,6 +8,12 @@ A lightweight web app for checking emails and passwords against the [Have I Been
 - **Paste site lookup** — check if emails appear on Pastebin and similar sites
 - **Password check** — uses k-anonymity (only a hash prefix is sent, your password never leaves your machine)
 - **Browser-side API key** — users paste their own HIBP key; it's stored in `localStorage` and never hardcoded
+- **Export results** — download breach and paste results as JSON, CSV, or PDF
+- **Rate limit warnings** — proactive warning when submitting more than 10 emails; friendly message if the HIBP rate limit is hit
+
+## Rate Limits
+
+The HIBP basic plan allows **10 email lookups per minute**. The app will warn you if you submit more than 10 addresses at once and display a clear message if you hit the limit. Submit in batches of 10 or wait a minute between requests. Higher-tier plans have increased limits — see [HIBP pricing](https://haveibeenpwned.com/API/Key) for details.
 
 ## Getting Started
 
