@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Have I Been Pwned</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #e85d04;
+      --accent2: #f48c06;
+      --green: #2ecc71;
+      --red: #e74c3c;
+      --yellow: #f39c12;
+      --text: #e8eaf0;
+      --muted: #7b82a0;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      color: var(--muted);
+      margin-top: 0.4rem;
+      font-size: 0.95rem;
+    }
+
+    .container { max-width: 780px; margin: 0 auto; }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.75rem;
+    }
+
+    .tab {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--muted);
+      padding: 0.5rem 1.1rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.15s;
+    }
+
+    .tab:hover { color: var(--text); border-color: var(--border); }
+    .tab.active { background: var(--surface2); color: var(--text); border-color: var(--border); }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    textarea, input[type="text"], input[type="password"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      padding: 0.7rem 0.9rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    textarea:focus, input:focus { border-color: var(--accent); }
+
+    .hint { color: var(--muted); font-size: 0.8rem; margin-top: 0.4rem; }
+
+    .row { display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; flex-wrap: wrap; }
+
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 0.65rem 1.4rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    button.primary:hover { opacity: 0.85; }
+    button.primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .results { margin-top: 1.5rem; }
+
+    .result-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.9rem 1.2rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .result-header:hover { background: var(--surface2); }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+
+    .badge.safe { background: rgba(46,204,113,0.15); color: var(--green); }
+    .badge.pwned { background: rgba(231,76,60,0.15); color: var(--red); }
+    .badge.warn { background: rgba(243,156,18,0.15); color: var(--yellow); }
+
+    .result-email { font-weight: 600; flex: 1; word-break: break-all; }
+    .chevron { color: var(--muted); transition: transform 0.2s; margin-left: auto; }
+    .result-block.open .chevron { transform: rotate(90deg); }
+
+    .result-body { display: none; padding: 0 1.2rem 1.2rem; }
+    .result-block.open .result-body { display: block; }
+
+    .breach-item {
+      border-top: 1px solid var(--border);
+      padding: 0.85rem 0;
+    }
+
+    .breach-item:first-child { border-top: none; }
+
+    .breach-name { font-weight: 700; font-size: 1rem; }
+    .breach-date { color: var(--muted); font-size: 0.8rem; margin-left: 0.5rem; }
+
+    .breach-classes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+    }
+
+    .chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.6rem;
+      color: var(--muted);
+    }
+
+    .breach-desc {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-top: 0.5rem;
+      line-height: 1.5;
+    }
+
+    .pw-result {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .pw-result .icon { font-size: 3rem; margin-bottom: 0.75rem; }
+    .pw-result .count { font-size: 1.1rem; font-weight: 600; }
+    .pw-result .sub { color: var(--muted); font-size: 0.85rem; margin-top: 0.4rem; }
+
+    .error-msg {
+      background: rgba(231,76,60,0.1);
+      border: 1px solid rgba(231,76,60,0.3);
+      color: var(--red);
+      border-radius: 7px;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+    }
+
+    .show-more {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 7px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.82rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      display: block;
+    }
+
+    .show-more:hover { color: var(--text); border-color: var(--accent); }
+
+    .pw-toggle {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.65rem 0;
+    }
+
+    .pw-toggle:hover { color: var(--text); }
+
+    .input-wrap { position: relative; }
+    .input-wrap input { padding-right: 5rem; }
+    .pw-toggle { position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Have I Been Pwned</h1>
+      <p>Check emails and passwords against known data breaches</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="breaches">Email Breaches</button>
+      <button class="tab" data-tab="pastes">Paste Sites</button>
+      <button class="tab" data-tab="password">Password Check</button>
+    </div>
+
+    <!-- Breaches -->
+    <div class="panel active" id="tab-breaches">
+      <div class="card">
+        <label for="breach-emails">Email addresses</label>
+        <textarea id="breach-emails" rows="4" placeholder="one@example.com&#10;two@example.com&#10;three@example.com"></textarea>
+        <p class="hint">One email per line</p>
+        <div class="row">
+          <button class="primary" id="breach-btn">Check Breaches</button>
+          <div class="spinner" id="breach-spinner"></div>
+        </div>
+      </div>
+      <div class="results" id="breach-results"></div>
+    </div>
+
+    <!-- Pastes -->
+    <div class="panel" id="tab-pastes">
+      <div class="card">
+        <label for="paste-emails">Email addresses</label>
+        <textarea id="paste-emails" rows="4" placeholder="one@example.com&#10;two@example.com"></textarea>
+        <p class="hint">One email per line</p>
+        <div class="row">
+          <button class="primary" id="paste-btn">Check Pastes</button>
+          <div class="spinner" id="paste-spinner"></div>
+        </div>
+      </div>
+      <div class="results" id="paste-results"></div>
+    </div>
+
+    <!-- Password -->
+    <div class="panel" id="tab-password">
+      <div class="card">
+        <label for="pw-input">Password</label>
+        <div class="input-wrap">
+          <input type="password" id="pw-input" placeholder="Enter a password to check" autocomplete="off" />
+          <button class="pw-toggle" id="pw-toggle">Show</button>
+        </div>
+        <p class="hint">Uses k-anonymity — only the first 5 characters of the SHA-1 hash are sent</p>
+        <div class="row">
+          <button class="primary" id="pw-btn">Check Password</button>
+          <div class="spinner" id="pw-spinner"></div>
+        </div>
+      </div>
+      <div class="results" id="pw-results"></div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab, .panel").forEach(el => el.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(`tab-${tab.dataset.tab}`).classList.add("active");
+      });
+    });
+
+    function setLoading(btnId, spinnerId, loading) {
+      document.getElementById(btnId).disabled = loading;
+      document.getElementById(spinnerId).style.display = loading ? "block" : "none";
+    }
+
+    function showError(containerId, msg) {
+      document.getElementById(containerId).innerHTML = `<div class="error-msg">${msg}</div>`;
+    }
+
+    function parseEmails(raw) {
+      return raw.split("\n").map(s => s.trim()).filter(s => s.length > 0);
+    }
+
+    async function apiPost(path, body) {
+      const res = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      return data;
+    }
+
+    // ---- Breach check ----
+    document.getElementById("breach-btn").addEventListener("click", async () => {
+      const emails = parseEmails(document.getElementById("breach-emails").value);
+      if (!emails.length) return;
+      setLoading("breach-btn", "breach-spinner", true);
+      const container = document.getElementById("breach-results");
+      container.innerHTML = "";
+      try {
+        const results = await apiPost("/api/breaches", { emails });
+        container.innerHTML = results.map(renderBreachBlock).join("");
+        container.querySelectorAll(".result-header").forEach(h => {
+          h.addEventListener("click", () => h.closest(".result-block").classList.toggle("open"));
+        });
+        container.querySelectorAll(".show-more").forEach(btn => {
+          btn.addEventListener("click", e => {
+            e.stopPropagation();
+            const hidden = btn.previousElementSibling.querySelectorAll(".breach-item.hidden");
+            hidden.forEach(el => el.classList.remove("hidden"));
+            btn.remove();
+          });
+        });
+      } catch (e) {
+        showError("breach-results", e.message);
+      } finally {
+        setLoading("breach-btn", "breach-spinner", false);
+      }
+    });
+
+    function renderBreachBlock({ email, breaches }) {
+      const count = breaches.length;
+      const badge = count === 0
+        ? `<span class="badge safe">Clean</span>`
+        : `<span class="badge pwned">${count} breach${count !== 1 ? "es" : ""}</span>`;
+
+      const items = breaches.map((b, i) => {
+        const desc = b.Description.replace(/<[^>]+>/g, "").slice(0, 220);
+        const classes = b.DataClasses.map(c => `<span class="chip">${c}</span>`).join("");
+        return `<div class="breach-item${i >= 5 ? " hidden" : ""}" style="${i >= 5 ? "display:none" : ""}">
+          <span class="breach-name">${b.Name}</span><span class="breach-date">${b.BreachDate}</span>
+          <div class="breach-classes">${classes}</div>
+          <p class="breach-desc">${desc}${b.Description.length > 220 ? "…" : ""}</p>
+        </div>`;
+      }).join("");
+
+      const showMore = count > 5 ? `<button class="show-more">Show ${count - 5} more…</button>` : "";
+
+      return `<div class="result-block${count > 0 ? " open" : ""}">
+        <div class="result-header">
+          ${badge}
+          <span class="result-email">${email}</span>
+          ${count > 0 ? '<span class="chevron">›</span>' : ""}
+        </div>
+        ${count > 0 ? `<div class="result-body">${items}${showMore}</div>` : ""}
+      </div>`;
+    }
+
+    // ---- Paste check ----
+    document.getElementById("paste-btn").addEventListener("click", async () => {
+      const emails = parseEmails(document.getElementById("paste-emails").value);
+      if (!emails.length) return;
+      setLoading("paste-btn", "paste-spinner", true);
+      const container = document.getElementById("paste-results");
+      container.innerHTML = "";
+      try {
+        const results = await apiPost("/api/pastes", { emails });
+        container.innerHTML = results.map(renderPasteBlock).join("");
+        container.querySelectorAll(".result-header").forEach(h => {
+          h.addEventListener("click", () => h.closest(".result-block").classList.toggle("open"));
+        });
+      } catch (e) {
+        showError("paste-results", e.message);
+      } finally {
+        setLoading("paste-btn", "paste-spinner", false);
+      }
+    });
+
+    function renderPasteBlock({ email, pastes }) {
+      const count = pastes.length;
+      const badge = count === 0
+        ? `<span class="badge safe">Clean</span>`
+        : `<span class="badge warn">${count} paste${count !== 1 ? "s" : ""}</span>`;
+
+      const items = pastes.map(p => `
+        <div class="breach-item">
+          <span class="breach-name">${p.Source}</span>
+          <span class="breach-date">${p.Date ? p.Date.slice(0, 10) : "unknown date"}</span>
+          <p class="breach-desc">${p.Title || "Untitled"}</p>
+        </div>`).join("");
+
+      return `<div class="result-block${count > 0 ? " open" : ""}">
+        <div class="result-header">
+          ${badge}
+          <span class="result-email">${email}</span>
+          ${count > 0 ? '<span class="chevron">›</span>' : ""}
+        </div>
+        ${count > 0 ? `<div class="result-body">${items}</div>` : ""}
+      </div>`;
+    }
+
+    // ---- Password check ----
+    const pwInput = document.getElementById("pw-input");
+    const pwToggle = document.getElementById("pw-toggle");
+    pwToggle.addEventListener("click", () => {
+      const show = pwInput.type === "password";
+      pwInput.type = show ? "text" : "password";
+      pwToggle.textContent = show ? "Hide" : "Show";
+    });
+
+    document.getElementById("pw-btn").addEventListener("click", async () => {
+      const password = pwInput.value;
+      if (!password) return;
+      setLoading("pw-btn", "pw-spinner", true);
+      const container = document.getElementById("pw-results");
+      container.innerHTML = "";
+      try {
+        const { count } = await apiPost("/api/password", { password });
+        if (count === 0) {
+          container.innerHTML = `<div class="result-block">
+            <div class="pw-result">
+              <div class="icon">✅</div>
+              <div class="count" style="color:var(--green)">Not found in any known breaches</div>
+              <div class="sub">This doesn't guarantee it's strong — use a password manager</div>
+            </div>
+          </div>`;
+        } else {
+          container.innerHTML = `<div class="result-block">
+            <div class="pw-result">
+              <div class="icon">🚨</div>
+              <div class="count" style="color:var(--red)">Seen ${count.toLocaleString()} time${count !== 1 ? "s" : ""} in data breaches</div>
+              <div class="sub">Do not use this password anywhere</div>
+            </div>
+          </div>`;
+        }
+      } catch (e) {
+        showError("pw-results", e.message);
+      } finally {
+        setLoading("pw-btn", "pw-spinner", false);
+      }
+    });
+
+    pwInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("pw-btn").click();
+    });
+  </script>
+</body>
+</html>
