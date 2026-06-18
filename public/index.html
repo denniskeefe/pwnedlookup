@@ -674,7 +674,7 @@
         container.querySelectorAll(".show-more").forEach(btn => {
           btn.addEventListener("click", e => {
             e.stopPropagation();
-            btn.previousElementSibling.querySelectorAll("[data-hidden]").forEach(el => {
+            btn.closest(".result-body").querySelectorAll("[data-hidden]").forEach(el => {
               el.style.display = "";
               el.removeAttribute("data-hidden");
             });
