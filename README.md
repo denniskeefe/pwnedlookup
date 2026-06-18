@@ -1,0 +1,57 @@
+# Have I Been Pwned App
+
+A lightweight web app for checking emails and passwords against the [Have I Been Pwned](https://haveibeenpwned.com) database. Runs locally or deploys to Vercel in one command.
+
+## Features
+
+- **Email breach lookup** — check one or more emails against all known breaches
+- **Paste site lookup** — check if emails appear on Pastebin and similar sites
+- **Password check** — uses k-anonymity (only a hash prefix is sent, your password never leaves your machine)
+- **Browser-side API key** — users paste their own HIBP key; it's stored in `localStorage` and never hardcoded
+
+## Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org) v18+
+- A [HIBP API key](https://haveibeenpwned.com/API/Key) (required for email lookups; password checks are free)
+
+### Run locally
+
+```bash
+git clone https://github.com/denniskeefe/hibp-app.git
+cd hibp-app
+npm install
+node server.js
+```
+
+Open [http://localhost:3737](http://localhost:3737), paste your API key into the banner, and start checking.
+
+## Deploy to Vercel
+
+```bash
+npm i -g vercel
+vercel
+```
+
+No extra configuration needed — `vercel.json` is already set up. Each user enters their own API key in the browser; nothing is stored server-side.
+
+## Project Structure
+
+```
+api/
+  _hibp.js       # Shared fetch logic and helpers
+  breaches.js    # POST /api/breaches — email breach lookup
+  pastes.js      # POST /api/pastes  — paste site lookup
+  password.js    # POST /api/password — pwned password check
+public/
+  index.html     # Single-page frontend (vanilla JS, no build step)
+server.js        # Local dev Express server (delegates to /api/ handlers)
+vercel.json      # Vercel routing config
+```
+
+## Security Notes
+
+- The HIBP API key is stored in your browser's `localStorage` and sent as an `x-hibp-key` request header — it is never embedded in source code
+- Password checks use the [k-anonymity model](https://haveibeenpwned.com/API/v3#PwnedPasswords): only the first 5 characters of the SHA-1 hash are transmitted
+- If self-hosting for others, consider adding authentication in front of the app to prevent unauthorized use of your API key
