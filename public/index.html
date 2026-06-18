@@ -32,7 +32,7 @@
 
     header {
       text-align: center;
-      margin-bottom: 2.5rem;
+      margin-bottom: 2rem;
     }
 
     header h1 {
@@ -44,14 +44,48 @@
       background-clip: text;
     }
 
-    header p {
-      color: var(--muted);
-      margin-top: 0.4rem;
-      font-size: 0.95rem;
-    }
+    header p { color: var(--muted); margin-top: 0.4rem; font-size: 0.95rem; }
 
     .container { max-width: 780px; margin: 0 auto; }
 
+    /* API Key banner */
+    .key-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .key-banner.set { border-color: rgba(46,204,113,0.3); background: rgba(46,204,113,0.05); }
+    .key-banner.unset { border-color: rgba(232,93,4,0.4); background: rgba(232,93,4,0.05); }
+
+    .key-banner-label { font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
+    .key-banner-label strong { display: block; color: var(--text); font-size: 0.9rem; }
+
+    .key-input-wrap { display: flex; gap: 0.5rem; flex: 1; min-width: 220px; }
+    .key-input-wrap input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      padding: 0.6rem 0.9rem;
+      font-size: 0.9rem;
+      font-family: monospace;
+      outline: none;
+    }
+    .key-input-wrap input:focus { border-color: var(--accent); }
+
+    .key-status { font-size: 0.8rem; white-space: nowrap; }
+    .key-status.ok { color: var(--green); }
+    .key-status.missing { color: var(--accent); }
+
+    /* Tabs */
     .tabs {
       display: flex;
       gap: 0.5rem;
@@ -130,6 +164,19 @@
     button.primary:hover { opacity: 0.85; }
     button.primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
+    button.secondary {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 7px;
+      padding: 0.6rem 1rem;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    button.secondary:hover { border-color: var(--accent); color: var(--accent); }
+
     .spinner {
       display: none;
       width: 18px; height: 18px;
@@ -181,22 +228,13 @@
     .result-body { display: none; padding: 0 1.2rem 1.2rem; }
     .result-block.open .result-body { display: block; }
 
-    .breach-item {
-      border-top: 1px solid var(--border);
-      padding: 0.85rem 0;
-    }
-
+    .breach-item { border-top: 1px solid var(--border); padding: 0.85rem 0; }
     .breach-item:first-child { border-top: none; }
 
     .breach-name { font-weight: 700; font-size: 1rem; }
     .breach-date { color: var(--muted); font-size: 0.8rem; margin-left: 0.5rem; }
 
-    .breach-classes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-      margin-top: 0.5rem;
-    }
+    .breach-classes { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem; }
 
     .chip {
       background: var(--surface2);
@@ -207,18 +245,9 @@
       color: var(--muted);
     }
 
-    .breach-desc {
-      color: var(--muted);
-      font-size: 0.82rem;
-      margin-top: 0.5rem;
-      line-height: 1.5;
-    }
+    .breach-desc { color: var(--muted); font-size: 0.82rem; margin-top: 0.5rem; line-height: 1.5; }
 
-    .pw-result {
-      text-align: center;
-      padding: 2rem;
-    }
-
+    .pw-result { text-align: center; padding: 2rem; }
     .pw-result .icon { font-size: 3rem; margin-bottom: 0.75rem; }
     .pw-result .count { font-size: 1.1rem; font-weight: 600; }
     .pw-result .sub { color: var(--muted); font-size: 0.85rem; margin-top: 0.4rem; }
@@ -247,20 +276,13 @@
 
     .show-more:hover { color: var(--text); border-color: var(--accent); }
 
-    .pw-toggle {
-      background: none;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 0.85rem;
-      padding: 0.65rem 0;
-    }
-
-    .pw-toggle:hover { color: var(--text); }
-
     .input-wrap { position: relative; }
     .input-wrap input { padding-right: 5rem; }
-    .pw-toggle { position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%); }
+    .pw-toggle {
+      position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.85rem;
+    }
+    .pw-toggle:hover { color: var(--text); }
   </style>
 </head>
 <body>
@@ -269,6 +291,20 @@
       <h1>Have I Been Pwned</h1>
       <p>Check emails and passwords against known data breaches</p>
     </header>
+
+    <!-- API Key Banner -->
+    <div class="key-banner unset" id="key-banner">
+      <div class="key-banner-label">
+        <strong>HIBP API Key</strong>
+        Stored locally in your browser
+      </div>
+      <div class="key-input-wrap">
+        <input type="password" id="key-input" placeholder="Paste your API key…" autocomplete="off" spellcheck="false" />
+        <button class="secondary" id="key-save-btn">Save</button>
+        <button class="secondary" id="key-clear-btn" style="display:none">Clear</button>
+      </div>
+      <span class="key-status missing" id="key-status">No key set</span>
+    </div>
 
     <div class="tabs">
       <button class="tab active" data-tab="breaches">Email Breaches</button>
@@ -312,7 +348,7 @@
           <input type="password" id="pw-input" placeholder="Enter a password to check" autocomplete="off" />
           <button class="pw-toggle" id="pw-toggle">Show</button>
         </div>
-        <p class="hint">Uses k-anonymity — only the first 5 characters of the SHA-1 hash are sent</p>
+        <p class="hint">Uses k-anonymity — only the first 5 characters of the SHA-1 hash are sent. No API key needed.</p>
         <div class="row">
           <button class="primary" id="pw-btn">Check Password</button>
           <div class="spinner" id="pw-spinner"></div>
@@ -323,7 +359,57 @@
   </div>
 
   <script>
-    // Tab switching
+    // ---- API Key management ----
+    const KEY_STORAGE = "hibp_api_key";
+
+    function getKey() { return localStorage.getItem(KEY_STORAGE) || ""; }
+
+    function updateKeyUI() {
+      const key = getKey();
+      const banner = document.getElementById("key-banner");
+      const status = document.getElementById("key-status");
+      const saveBtn = document.getElementById("key-save-btn");
+      const clearBtn = document.getElementById("key-clear-btn");
+      const input = document.getElementById("key-input");
+
+      if (key) {
+        banner.className = "key-banner set";
+        status.textContent = "Key saved ✓";
+        status.className = "key-status ok";
+        input.value = "••••••••••••••••••••••••••••••••";
+        input.disabled = true;
+        saveBtn.style.display = "none";
+        clearBtn.style.display = "";
+      } else {
+        banner.className = "key-banner unset";
+        status.textContent = "No key set";
+        status.className = "key-status missing";
+        input.value = "";
+        input.disabled = false;
+        saveBtn.style.display = "";
+        clearBtn.style.display = "none";
+      }
+    }
+
+    document.getElementById("key-save-btn").addEventListener("click", () => {
+      const val = document.getElementById("key-input").value.trim();
+      if (!val) return;
+      localStorage.setItem(KEY_STORAGE, val);
+      updateKeyUI();
+    });
+
+    document.getElementById("key-clear-btn").addEventListener("click", () => {
+      localStorage.removeItem(KEY_STORAGE);
+      updateKeyUI();
+    });
+
+    document.getElementById("key-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("key-save-btn").click();
+    });
+
+    updateKeyUI();
+
+    // ---- Tabs ----
     document.querySelectorAll(".tab").forEach(tab => {
       tab.addEventListener("click", () => {
         document.querySelectorAll(".tab, .panel").forEach(el => el.classList.remove("active"));
@@ -332,6 +418,7 @@
       });
     });
 
+    // ---- API helper ----
     function setLoading(btnId, spinnerId, loading) {
       document.getElementById(btnId).disabled = loading;
       document.getElementById(spinnerId).style.display = loading ? "block" : "none";
@@ -346,11 +433,10 @@
     }
 
     async function apiPost(path, body) {
-      const res = await fetch(path, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const key = getKey();
+      const headers = { "Content-Type": "application/json" };
+      if (key) headers["x-hibp-key"] = key;
+      const res = await fetch(path, { method: "POST", headers, body: JSON.stringify(body) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       return data;
@@ -372,8 +458,10 @@
         container.querySelectorAll(".show-more").forEach(btn => {
           btn.addEventListener("click", e => {
             e.stopPropagation();
-            const hidden = btn.previousElementSibling.querySelectorAll(".breach-item.hidden");
-            hidden.forEach(el => el.classList.remove("hidden"));
+            btn.previousElementSibling.querySelectorAll("[data-hidden]").forEach(el => {
+              el.style.display = "";
+              el.removeAttribute("data-hidden");
+            });
             btn.remove();
           });
         });
@@ -393,7 +481,8 @@
       const items = breaches.map((b, i) => {
         const desc = b.Description.replace(/<[^>]+>/g, "").slice(0, 220);
         const classes = b.DataClasses.map(c => `<span class="chip">${c}</span>`).join("");
-        return `<div class="breach-item${i >= 5 ? " hidden" : ""}" style="${i >= 5 ? "display:none" : ""}">
+        const hidden = i >= 5;
+        return `<div class="breach-item" ${hidden ? 'data-hidden style="display:none"' : ""}>
           <span class="breach-name">${b.Name}</span><span class="breach-date">${b.BreachDate}</span>
           <div class="breach-classes">${classes}</div>
           <p class="breach-desc">${desc}${b.Description.length > 220 ? "…" : ""}</p>
@@ -457,11 +546,10 @@
 
     // ---- Password check ----
     const pwInput = document.getElementById("pw-input");
-    const pwToggle = document.getElementById("pw-toggle");
-    pwToggle.addEventListener("click", () => {
+    document.getElementById("pw-toggle").addEventListener("click", function () {
       const show = pwInput.type === "password";
       pwInput.type = show ? "text" : "password";
-      pwToggle.textContent = show ? "Hide" : "Show";
+      this.textContent = show ? "Hide" : "Show";
     });
 
     document.getElementById("pw-btn").addEventListener("click", async () => {
@@ -472,23 +560,17 @@
       container.innerHTML = "";
       try {
         const { count } = await apiPost("/api/password", { password });
-        if (count === 0) {
-          container.innerHTML = `<div class="result-block">
-            <div class="pw-result">
+        container.innerHTML = count === 0
+          ? `<div class="result-block"><div class="pw-result">
               <div class="icon">✅</div>
               <div class="count" style="color:var(--green)">Not found in any known breaches</div>
               <div class="sub">This doesn't guarantee it's strong — use a password manager</div>
-            </div>
-          </div>`;
-        } else {
-          container.innerHTML = `<div class="result-block">
-            <div class="pw-result">
+             </div></div>`
+          : `<div class="result-block"><div class="pw-result">
               <div class="icon">🚨</div>
               <div class="count" style="color:var(--red)">Seen ${count.toLocaleString()} time${count !== 1 ? "s" : ""} in data breaches</div>
               <div class="sub">Do not use this password anywhere</div>
-            </div>
-          </div>`;
-        }
+             </div></div>`;
       } catch (e) {
         showError("pw-results", e.message);
       } finally {
