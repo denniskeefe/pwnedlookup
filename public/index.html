@@ -263,6 +263,17 @@
       margin-top: 1rem;
     }
 
+    .warn-msg {
+      background: rgba(243,156,18,0.1);
+      border: 1px solid rgba(243,156,18,0.35);
+      color: var(--yellow);
+      border-radius: 7px;
+      padding: 0.75rem 1rem;
+      font-size: 0.88rem;
+      margin-top: 0.75rem;
+      line-height: 1.5;
+    }
+
     .show-more {
       background: none;
       border: 1px solid var(--border);
@@ -617,8 +628,18 @@
       document.getElementById(spinnerId).style.display = loading ? "block" : "none";
     }
 
+    const RATE_LIMIT_MSG = `<div class="error-msg"><strong>Rate limited by HIBP.</strong> The basic plan allows up to 10 email lookups per minute. Please wait a minute and try again, or submit 10 or fewer addresses at a time.</div>`;
+
     function showError(containerId, msg) {
-      document.getElementById(containerId).innerHTML = `<div class="error-msg">${msg}</div>`;
+      const isRateLimit = msg.includes("Rate limited") || msg.includes("429");
+      document.getElementById(containerId).innerHTML = isRateLimit
+        ? RATE_LIMIT_MSG
+        : `<div class="error-msg">${msg}</div>`;
+    }
+
+    function emailCountWarning(count) {
+      if (count <= 10) return "";
+      return `<div class="warn-msg"><strong>Heads up:</strong> You've entered ${count} email addresses. The HIBP basic plan allows up to 10 lookups per minute — if you hit the limit you'll need to wait a minute before retrying. Consider submitting in batches of 10.</div>`;
     }
 
     function parseEmails(raw) {
@@ -641,7 +662,7 @@
       if (!emails.length) return;
       setLoading("breach-btn", "breach-spinner", true);
       const container = document.getElementById("breach-results");
-      container.innerHTML = "";
+      container.innerHTML = emailCountWarning(emails.length);
       try {
         const results = await apiPost("/api/breaches", { emails });
         lastResults.breach = results;
@@ -702,7 +723,7 @@
       if (!emails.length) return;
       setLoading("paste-btn", "paste-spinner", true);
       const container = document.getElementById("paste-results");
-      container.innerHTML = "";
+      container.innerHTML = emailCountWarning(emails.length);
       try {
         const results = await apiPost("/api/pastes", { emails });
         lastResults.paste = results;
