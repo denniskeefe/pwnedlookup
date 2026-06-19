@@ -1,3 +1,4 @@
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/denniskeefe)
 # PwnedLookup
 
 A lightweight web app for checking emails and passwords against the [Have I Been Pwned](https://haveibeenpwned.com) database. Runs locally or deploys to Vercel in one command.
