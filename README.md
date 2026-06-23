@@ -1,4 +1,3 @@
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/denniskeefe)
 # PwnedLookup
 
 [![More Projects](https://img.shields.io/badge/🌐_More_Projects-denniskeefe.me-2e3250?style=for-the-badge)](https://denniskeefe.me/my-projects/)
