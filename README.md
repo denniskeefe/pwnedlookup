@@ -1,7 +1,6 @@
 # PwnedLookup
 
-[![More Projects](https://img.shields.io/badge/🌐_More_Projects-denniskeefe.me-2e3250?style=for-the-badge)](https://denniskeefe.me/my-projects/)
-[![Buy me a coffee](https://img.shields.io/badge/☕_Buy_me_a_coffee-Ko--fi-ff5e5b?style=for-the-badge)](https://ko-fi.com/denniskeefe)
+[![My Projects](https://img.shields.io/badge/See_My_Other_Projects-008DFF?style=for-the-badge&logo=googlechrome&logoColor=white)](https://denniskeefe.me/my-projects/) [![ko-fi](https://img.shields.io/badge/Buy_Me_a_Coffee-29ABE0?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/denniskeefe)
 
 A lightweight web app for checking emails and passwords against the [Have I Been Pwned](https://haveibeenpwned.com) database. Runs locally or deploys to Vercel in one command.
 
